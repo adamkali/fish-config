@@ -9,11 +9,13 @@ function project_orion_dir
 end
 
 function edit_fish
-    nvim ~/.config/fish/config.fish
+    cd ~/.config/fish/
+    nvim config.fish
 end
 
 function edit_nvim
-    nvim ~/.config/nvim/init.lua
+    cd ~/.config/nvim/
+    nvim init.lua
 end
 
 function edit_starship
@@ -25,8 +27,14 @@ function update_and_upgrade_no_confirm
     sudo apt-get upgrade -y
 end
 
+function cd_pyportal
+    cd /mnt/c/s/e/PyPortalWorkflow
+    nvim
+end
+
 alias ~p="project_orion"
 alias ~P="project_orion_dir"
+alias efpy="cd_pyportal"
 alias ef="edit_fish"
 alias en="edit_nvim"
 alias es="edit_starship"
