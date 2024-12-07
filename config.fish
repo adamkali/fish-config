@@ -20,16 +20,24 @@ function fish_greeting
 end
 
 function edit_fish
-    nvim ~/.config/fish/config.fish
+    cd ~/.config/fisd/
+    nvim 
 end
 
 function edit_nvim
-    nvim ~/.config/nvim/init.lua
+    cd ~/.config/nvim/
+    nvim 
 end
 
 function edit_starship
     nvim ~/.config/starship.toml
 end
+export PATH="$PATH:/usr/local/bin/nvim/bin"
+export PATH="$PATH:/home/adamkali/.local/omnisharp"
+export PATH="$PATH:/home/adamkali/.local/bin"
+export PATH="$PATH:/home/adamkali/.dotnet/tools"
+export GOPATH=$HOME/go
+export GOBIN=$HOME/go/bin
 
 alias ~p="project_orion"
 alias ~P="project_orion_dir"
@@ -39,11 +47,10 @@ alias es="edit_starship"
 alias ls="exa --icons"
 alias lt="exa -T --icons"
 alias py="python3"
-
-
-export PATH="$PATH:/opt/nvim-linux64/bin"
-export GOPATH=$HOME/go
-export GOBIN=$HOME/go/bin
+alias vi="nvim"
+alias lz="lazygit"
+alias osh="OmniSharp"
+alias wezterm='flatpak run org.wezfurlong.wezterm'
 
 fish_vi_key_bindings 
 
@@ -54,3 +61,18 @@ source (/home/adamkali/.cargo/bin/starship init fish --print-full-init | psub)
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
+
+# pnpm
+set -gx PNPM_HOME "/home/adamkali/.local/share/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
+
+
+# pyenv init
+if command -v pyenv 1>/dev/null 2>&1
+  pyenv init - | source
+end
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
