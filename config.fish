@@ -36,8 +36,14 @@ export PATH="$PATH:/usr/local/bin/nvim/bin"
 export PATH="$PATH:/home/adamkali/.local/omnisharp"
 export PATH="$PATH:/home/adamkali/.local/bin"
 export PATH="$PATH:/home/adamkali/.dotnet/tools"
+export PATH="$PATH:/home/adamkali/.local/bin"
+export PATH="$PATH:/opt/mssql-tools18/bin"
 export GOPATH=$HOME/go
 export GOBIN=$HOME/go/bin
+export VISUAL="/home/linuxbrew/.linuxbrew/bin/nvim"
+export EDITOR="/home/linuxbrew/.linuxbrew/bin/nvim"
+
+set DOTNET_SYSTEM_GLOBALIZATION_INVARIANT true
 
 alias ~p="project_orion"
 alias ~P="project_orion_dir"
@@ -57,6 +63,14 @@ fish_vi_key_bindings
 # Add Go binaries directory to PATH
 set -gx PATH $PATH $HOME/go/bin
 source (/home/adamkali/.cargo/bin/starship init fish --print-full-init | psub)
+export PATH="$PATH:~/.local/bin/tailwindcss"
+
+# netcoredbg
+export PATH="$PATH:/usr/local"
+
+zoxide init fish | source
+
+
 
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
