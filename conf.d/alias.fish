@@ -4,6 +4,8 @@ function project_orion
     nvim Makefile
 end
 
+
+
 function project_orion_dir
     cd ~/git/project_orion
 end
@@ -62,6 +64,7 @@ alias rmf="rm -rf"
 alias lol="lolcat"
 alias suu="update_and_upgrade_no_confirm"
 alias sai="sudo apt install"
+alias egg="egg_cli"
 
 alias Ef=filing_portal
 alias Ecs=client_service
@@ -69,6 +72,6 @@ alias Ecs=client_service
 alias ld="lazydocker"
 alias lg="lazygit"
 alias lds="DOCKER_HOST='ssh://kalilarosa@kalilarosa.xyz' lazydocker"
-
+alias confme="/home/adamkali/.config/server/config_me.sh"
 
 alias lsp='lsof -i -P | grep'

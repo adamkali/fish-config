@@ -1,0 +1,1 @@
+complete --command openapi-python-client --no-files --arguments "(env _OPENAPI_PYTHON_CLIENT_COMPLETE=complete_fish _TYPER_COMPLETE_FISH_ACTION=get-args _TYPER_COMPLETE_ARGS=(commandline -cp) openapi-python-client)" --condition "env _OPENAPI_PYTHON_CLIENT_COMPLETE=complete_fish _TYPER_COMPLETE_FISH_ACTION=is-args _TYPER_COMPLETE_ARGS=(commandline -cp) openapi-python-client"
