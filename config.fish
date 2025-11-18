@@ -89,3 +89,6 @@ source ~/fzf-git.sh/fzf-git.fish
 
 set --export BAT_THEME "Vaporlush"
 set --export BAT_STYLE "numbers,grid"
+
+
+set --export MANPAGER "nvim +Man!"

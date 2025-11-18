@@ -1,0 +1,296 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_NAME="coolify-deploy"
+VERSION="1.0.0"
+
+show_help() {
+    cat << EOF
+$SCRIPT_NAME v$VERSION - Deploy Docker applications to Coolify
+
+USAGE:
+    $SCRIPT_NAME [OPTIONS]
+
+REQUIRED ENVIRONMENT VARIABLES:
+    COOLIFY_URL         Base URL of your Coolify instance (e.g., https://coolify.example.com)
+    COOLIFY_TOKEN       API token from Coolify Keys & Tokens
+    PROJECT_UUID        Project UUID where the application will be created
+    SERVER_UUID         Server UUID where the application will be deployed
+
+OPTIONS:
+    -n, --name NAME                 Application name (required)
+    -i, --image IMAGE              Docker image name (required)
+    -t, --tag TAG                  Docker image tag (default: latest)
+    -p, --port PORT                Port to expose (can be used multiple times)
+    -d, --domain DOMAIN            Domain for the application (can be used multiple times)
+    -e, --env KEY=VALUE            Environment variable (can be used multiple times)
+    --memory LIMIT                 Memory limit (e.g., 512m, 1g)
+    --cpu LIMIT                    CPU limit (e.g., 0.5, 1)
+    --health-path PATH             Health check path
+    --health-port PORT             Health check port
+    --restart-policy POLICY        Restart policy (no, always, on-failure, unless-stopped)
+    --dry-run                      Show the request that would be sent without executing
+    -h, --help                     Show this help message
+
+EXAMPLES:
+    # Basic deployment
+    $SCRIPT_NAME -n my-app -i nginx -t latest -p 80 -d app.example.com
+
+    # Advanced deployment with environment variables and resource limits
+    $SCRIPT_NAME -n api-server -i myregistry/api:v1.2.3 \\
+        -p 8080 -d api.example.com \\
+        -e NODE_ENV=production -e DB_HOST=postgres.local \\
+        --memory 1g --cpu 0.5 --health-path /health --health-port 8080
+
+    # Multiple ports and domains
+    $SCRIPT_NAME -n web-app -i webapp:latest \\
+        -p 80 -p 443 -d app.example.com -d www.app.example.com
+
+ENVIRONMENT FILE:
+    You can also create a .env file in the same directory as this script:
+    COOLIFY_URL=https://coolify.example.com
+    COOLIFY_TOKEN=your_api_token_here
+    PROJECT_UUID=your_project_uuid
+    SERVER_UUID=your_server_uuid
+EOF
+}
+
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+error() {
+    log "ERROR: $*"
+    exit 1
+}
+
+check_dependencies() {
+    local deps=("curl" "jq")
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            error "$dep is required but not installed"
+        fi
+    done
+}
+
+load_env_file() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local env_file="$script_dir/.env"
+    
+    if [[ -f "$env_file" ]]; then
+        log "Loading environment from $env_file"
+        set -a
+        source "$env_file"
+        set +a
+    fi
+}
+
+validate_required_vars() {
+    local required_vars=("COOLIFY_URL" "COOLIFY_TOKEN" "PROJECT_UUID" "SERVER_UUID")
+    for var in "${required_vars[@]}"; do
+        if [[ -z "${!var:-}" ]]; then
+            error "Required environment variable $var is not set"
+        fi
+    done
+}
+
+validate_required_args() {
+    if [[ -z "${APP_NAME:-}" ]]; then
+        error "Application name is required (use -n or --name)"
+    fi
+    
+    if [[ -z "${DOCKER_IMAGE:-}" ]]; then
+        error "Docker image is required (use -i or --image)"
+    fi
+}
+
+build_request_body() {
+    local json_body=""
+    
+    # Required fields
+    json_body=$(jq -n \
+        --arg project_uuid "$PROJECT_UUID" \
+        --arg server_uuid "$SERVER_UUID" \
+        --arg name "$APP_NAME" \
+        --arg image "$DOCKER_IMAGE" \
+        --arg tag "${DOCKER_TAG:-latest}" \
+        '{
+            project_uuid: $project_uuid,
+            server_uuid: $server_uuid,
+            name: $name,
+            docker_registry_image_name: $image,
+            docker_registry_image_tag: $tag
+        }')
+    
+    # Add ports if specified
+    if [[ ${#PORTS[@]} -gt 0 ]]; then
+        local ports_json=$(printf '%s\n' "${PORTS[@]}" | jq -R . | jq -s .)
+        json_body=$(echo "$json_body" | jq --argjson ports "$ports_json" '.ports_exposes = ($ports | join(","))')
+    fi
+    
+    # Add domains if specified
+    if [[ ${#DOMAINS[@]} -gt 0 ]]; then
+        local domains_json=$(printf '%s\n' "${DOMAINS[@]}" | jq -R . | jq -s .)
+        json_body=$(echo "$json_body" | jq --argjson domains "$domains_json" '.domains = ($domains | join(","))')
+    fi
+    
+    # Add environment variables if specified
+    if [[ ${#ENV_VARS[@]} -gt 0 ]]; then
+        local env_string=""
+        for env_var in "${ENV_VARS[@]}"; do
+            env_string+="$env_var"$'\n'
+        done
+        json_body=$(echo "$json_body" | jq --arg envs "${env_string%$'\n'}" '.environment_variables = $envs')
+    fi
+    
+    # Add resource limits if specified
+    if [[ -n "${MEMORY_LIMIT:-}" ]]; then
+        json_body=$(echo "$json_body" | jq --arg memory "$MEMORY_LIMIT" '.memory_limit = $memory')
+    fi
+    
+    if [[ -n "${CPU_LIMIT:-}" ]]; then
+        json_body=$(echo "$json_body" | jq --arg cpu "$CPU_LIMIT" '.cpu_limit = $cpu')
+    fi
+    
+    # Add health check settings if specified
+    if [[ -n "${HEALTH_PATH:-}" ]]; then
+        json_body=$(echo "$json_body" | jq --arg path "$HEALTH_PATH" '.health_check_path = $path')
+    fi
+    
+    if [[ -n "${HEALTH_PORT:-}" ]]; then
+        json_body=$(echo "$json_body" | jq --arg port "$HEALTH_PORT" '.health_check_port = $port')
+    fi
+    
+    # Add restart policy if specified
+    if [[ -n "${RESTART_POLICY:-}" ]]; then
+        json_body=$(echo "$json_body" | jq --arg policy "$RESTART_POLICY" '.restart_policy = $policy')
+    fi
+    
+    echo "$json_body"
+}
+
+deploy_application() {
+    local request_body="$1"
+    local api_url="${COOLIFY_URL%/}/api/v1/applications/dockerimage"
+    
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+        log "DRY RUN - Request that would be sent:"
+        echo "URL: $api_url"
+        echo "Headers: Authorization: Bearer [HIDDEN]"
+        echo "Body:"
+        echo "$request_body" | jq .
+        return 0
+    fi
+    
+    log "Deploying application '$APP_NAME' to Coolify..."
+    log "API URL: $api_url"
+    
+    local response
+    response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+        -X POST \
+        -H "Authorization: Bearer $COOLIFY_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "$request_body" \
+        "$api_url")
+    
+    local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
+    local response_body=$(echo "$response" | sed '/HTTP_STATUS:/d')
+    
+    if [[ "$http_status" == "201" ]]; then
+        log "Application deployed successfully!"
+        local app_uuid=$(echo "$response_body" | jq -r '.uuid // .id // "N/A"')
+        log "Application UUID: $app_uuid"
+        echo "$response_body" | jq .
+    else
+        error "Deployment failed with HTTP status $http_status"$'\n'"Response: $response_body"
+    fi
+}
+
+main() {
+    local PORTS=()
+    local DOMAINS=()
+    local ENV_VARS=()
+    local APP_NAME=""
+    local DOCKER_IMAGE=""
+    local DOCKER_TAG=""
+    local MEMORY_LIMIT=""
+    local CPU_LIMIT=""
+    local HEALTH_PATH=""
+    local HEALTH_PORT=""
+    local RESTART_POLICY=""
+    local DRY_RUN="false"
+    
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -n|--name)
+                APP_NAME="$2"
+                shift 2
+                ;;
+            -i|--image)
+                DOCKER_IMAGE="$2"
+                shift 2
+                ;;
+            -t|--tag)
+                DOCKER_TAG="$2"
+                shift 2
+                ;;
+            -p|--port)
+                PORTS+=("$2")
+                shift 2
+                ;;
+            -d|--domain)
+                DOMAINS+=("$2")
+                shift 2
+                ;;
+            -e|--env)
+                ENV_VARS+=("$2")
+                shift 2
+                ;;
+            --memory)
+                MEMORY_LIMIT="$2"
+                shift 2
+                ;;
+            --cpu)
+                CPU_LIMIT="$2"
+                shift 2
+                ;;
+            --health-path)
+                HEALTH_PATH="$2"
+                shift 2
+                ;;
+            --health-port)
+                HEALTH_PORT="$2"
+                shift 2
+                ;;
+            --restart-policy)
+                RESTART_POLICY="$2"
+                shift 2
+                ;;
+            --dry-run)
+                DRY_RUN="true"
+                shift
+                ;;
+            *)
+                error "Unknown option: $1"
+                ;;
+        esac
+    done
+    
+    check_dependencies
+    load_env_file
+    validate_required_vars
+    validate_required_args
+    
+    local request_body
+    request_body=$(build_request_body)
+    
+    deploy_application "$request_body"
+}
+
+main "$@"

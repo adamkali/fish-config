@@ -4,8 +4,6 @@ function project_orion
     nvim Makefile
 end
 
-
-
 function project_orion_dir
     cd ~/git/project_orion
 end

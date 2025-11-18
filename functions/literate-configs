@@ -1,1 +1,8 @@
-~/org/config/fish/config.norg,~/org/config/nvim/index.norg,~/org/config/nvim/lua/norbsidian.norg,~/org/config/nvim/lua/custom.norg,~/org/config/nvim/after/plugin/keymap.norg
+Tmux Config|$HOME/org/config/tmux/index.norg
+Fish Main Config|$HOME/org/config/fish/config.norg
+Neovim Init Config|$HOME/org/config/nvim/index.norg
+Neorg to Obsidian Script|$HOME/org/config/nvim/lua/norbsidian.norg
+Neovim LSP Config|$HOME/org/config/nvim/after/plugin/lsp.norg
+Neovim Colorscheme|$HOME/org/config/nvim/after/plugin/colorscheme.norg
+Neovim Keymap Config|$HOME/org/config/nvim/after/plugin/keymap.norg
+
