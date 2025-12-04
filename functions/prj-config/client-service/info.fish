@@ -1,0 +1,21 @@
+set -g SHORTNAME "client-service"
+set -g LONGNAME " Client Service" # these empty ones are replaced manually
+set -g DESCRIPTION "eFileMadeEasy.ClientService.API: the client microservice that allows the users to connect to the portal."
+set -g LOCATION       "$HOME/efme/ClientService/eFileMadeEasy.Client/" 
+set -g LOCATION_SLN   "$HOME/efme/ClientService/eFileMadeEasy.Client/eFileMadeEasy.Client.sln"
+set -g LOCATION_MAKE  "$HOME/efme/ClientService/eFileMadeEasy.Client/Makefile"
+set -g LOCATION_NOTES "$HOME/org/efme/eFileMadeEasy.Client/auth0.norg"
+
+set -g LABEL_1 ""
+set -g LABEL_2 ""
+set -g LABEL_3 ""
+set -g LABEL_4 "󰚩"
+set -g LABEL_5 "󰈺"
+set -g LABEL_6 ""
+
+set -g ACTION_1 "nvim $LOCATION_SLN" 
+set -g ACTION_2 "nvim $LOCATION_NOTES"
+set -g ACTION_3 "nvim $LOCATION_MAKE"
+set -g ACTION_4 "claude"
+set -g ACTION_5 "fish"
+set -g ACTION_6 "lazygit"

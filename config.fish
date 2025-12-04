@@ -1,3 +1,12 @@
+# Adam Kalinowski's Fish config 
+
+#    ___________.__       .__      _________                _____.__        
+#   \_   _____/|__| _____|  |__   \_   ___ \  ____   _____/ ____\__| ____  
+#    |    __)  |  |/  ___/  |  \  /    \  \/ /  _ \ /    \   __\|  |/ ___\ 
+#    |     \   |  |\___ \|   Y  \ \     \___(  <_> )   |  \  |  |  / /_/  >
+#    \___  /   |__/____  >___|  /  \______  /\____/|___|  /__|  |__\___  / 
+#        \/            \/     \/          \/            \/        /_____/
+
 # Interactive session
 
 if status is-interactive
@@ -27,7 +36,19 @@ export GOBIN=$HOME/go/bin
 export VISUAL="/home/linuxbrew/.linuxbrew/bin/nvim"
 export EDITOR="/home/linuxbrew/.linuxbrew/bin/nvim"
 export DOOMDIR=$HOME/.config/doom/
+
 set DOTNET_SYSTEM_GLOBALIZATION_INVARIANT true
+
+alias ls="exa --icons"
+alias lt="exa -T --icons"
+alias py="python3"
+alias vi="nvim"
+alias lz="lazygit"
+alias ld="lazydocker"
+alias osh="OmniSharp"
+alias wezterm='flatpak run org.wezfurlong.wezterm'
+alias ff="pokeget infernape --hide-name | fastfetch --file-raw -"
+alias fzm="fzf-make"
 
 # Vim Keybindings
 
@@ -90,5 +111,6 @@ source ~/fzf-git.sh/fzf-git.fish
 set --export BAT_THEME "Vaporlush"
 set --export BAT_STYLE "numbers,grid"
 
+# Configure nvim to be the Manager
 
 set --export MANPAGER "nvim +Man!"
