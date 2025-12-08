@@ -1,8 +1,8 @@
 # Adam Kalinowski's Fish config 
 
-#    ___________.__       .__      _________                _____.__        
-#   \_   _____/|__| _____|  |__   \_   ___ \  ____   _____/ ____\__| ____  
-#    |    __)  |  |/  ___/  |  \  /    \  \/ /  _ \ /    \   __\|  |/ ___\ 
+#     ___________.__       .__      _________                _____.__        
+#    \_   _____/|__| _____|  |__   \_   ___ \  ____   _____/ ____\__| ____  
+#     |    __)  |  |/  ___/  |  \  /    \  \/ /  _ \ /    \   __\|  |/ ___\ 
 #    |     \   |  |\___ \|   Y  \ \     \___(  <_> )   |  \  |  |  / /_/  >
 #    \___  /   |__/____  >___|  /  \______  /\____/|___|  /__|  |__\___  / 
 #        \/            \/     \/          \/            \/        /_____/
@@ -22,7 +22,7 @@ end
 # Fish Geeting 
 
 function fish_greeting
-pokeget 390 702
+pokeget 390 702 --hide-name
 end
 
 # Source important variables
@@ -60,7 +60,7 @@ set -gx PATH $PATH $HOME/go/bin
 
 # Init starship
 
-source (/home/adamkali/.cargo/bin/starship init fish --print-full-init | psub)
+source ($HOME/.cargo/bin/starship init fish --print-full-init | psub)
 
 # Add TailwindCSS to the path
 
@@ -77,7 +77,7 @@ set --export PATH $BUN_INSTALL/bin $PATH
 
 # Install and Configure pnpm
 
-set -gx PNPM_HOME "/home/adamkali/.local/share/pnpm"
+set -gx PNPM_HOME "$HOME/.local/share/pnpm"
 if not string match -q -- $PNPM_HOME $PATH
 set -gx PATH "$PNPM_HOME" $PATH
 end
